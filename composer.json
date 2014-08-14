@@ -1,9 +1,9 @@
 {
-    "name": "hatframework/resources/upload",
+    "name": "hatframework/hat-resource-upload",
     "type": "library",
     "description": "",
     "keywords": [],
-    "homepage": "https://github.com/hat-framework/resources/upload",
+    "homepage": "https://github.com/hat-framework/hat-resource-upload",
     "license": "MIT",
     "authors": [
         {
