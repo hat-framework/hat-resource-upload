@@ -39,10 +39,8 @@ class uploadifyJs extends JsPlugin{
     
     public function init(){
         $this->LoadJsPlugin('jqueryui/blockui', 'bui'); 
-        $this->Html->LoadExternCss($this->url."/css/uploadify");
-        $this->Html->LoadExternCss($this->url."/css/form");
-        $this->Html->LoadJs($this->url."/scripts/jquery.uploadify", true);
-        $this->Html->LoadJs($this->url."/scripts/form_events");
+        $this->Html->LoadBowerComponent("uploadify/jquery.uploadify.min");
+        $this->Html->LoadBowerComponentCss("uploadify/uploadify");
     }
     
     public function configure($field_name, $album, $usuario, $folder = 'fotos', $multi = true){
@@ -101,6 +99,3 @@ class uploadifyJs extends JsPlugin{
         return new ImageModel();
     }
 }
-
-
-?>

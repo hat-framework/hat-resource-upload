@@ -28,16 +28,19 @@ class blueimpJs extends JsPlugin{
         
         ob_start();
         include dirname(__FILE__) .'/angular/angular.html';
-        include dirname(__FILE__) . '/angular/gallery.html';
         $var = ob_get_contents();
         ob_end_clean();
         return str_replace("{{URL}}", $url, $var);
     }
 
     private $css = array('bootstrap.min', 'style', 'gallery', 'jquery.fileupload', 'jquery.fileupload-ui');
-    private $js  = array('vendor/jquery.ui.widget', 'load-image.min', 'canvas-to-blob.min', 'jquery.blueimp-gallery.min', 
-        'jquery.iframe-transport', 'jquery.fileupload', 'jquery.fileupload-process', 'jquery.fileupload-image', 
-        'jquery.fileupload-audio', 'jquery.fileupload-video', 'jquery.fileupload-validate', 'jquery.fileupload-angular', 'app');
+    private $js  = array(
+        'jquery-ui/jquery-ui.min', 'blueimp-image-image/js/load-image.min', 'blueimp-canvas-to-blob/js/canvas-to-blob.min', 
+        'jquery.blueimp-gallery.min', 
+        'jquery.iframe-transport', 'blueimp-file-upload/js/jquery.fileupload', 'blueimp-file-upload/js/jquery.fileupload-process', 
+        'blueimp-file-upload/js/jquery.fileupload-image', 
+        'blueimp-file-upload/js/jquery.fileupload-audio', 'blueimp-file-upload/js/jquery.fileupload-video', 
+        'blueimp-file-upload/js/jquery.fileupload-validate', 'blueimp-file-upload/js/jquery.fileupload-angular');
     public function init(){
         foreach($this->css as $css){
             $this->Html->LoadCss("plugins/blueimp/$css");
@@ -45,7 +48,7 @@ class blueimpJs extends JsPlugin{
         $this->Html->LoadJquery();
         $this->Html->LoadAngular();
         foreach($this->js as $js){
-            $this->Html->LoadJs($this->url . "/js/$js");
+            $this->Html->LoadBowerComponent($js);
         }
     }
     
