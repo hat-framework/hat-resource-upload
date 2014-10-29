@@ -1,5 +1,5 @@
 <?php
-if(file_exists("../../../init.php")) require_once "../../../init.php";
+if(file_exists($_SERVER['DOCUMENT_ROOT'].'/init.php')) require_once $_SERVER['DOCUMENT_ROOT'].'/init.php';
 require_once 'Resizer.php';
 require_once 'uploadImageModel.php';
 require_once 'config.php';
