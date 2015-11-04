@@ -6,12 +6,12 @@ class uploadImageModel extends classes\Classes\Object{
     
     private $img = array();
     public function __construct() {
-        $this->LoadModel("galeria/foto", "gfotos");
+        $this->LoadModel("galeria/foto" , "gfotos");
     }
     
     public function upload(){
         
-        $this->init();        
+        if(false === $this->init()){return false;}
         $img    = UploaderImagesHelper::getInstanceOf();
         if(!$img->Upload($this->upfolder, $_FILES)){
             $this->setErrorMessage ($img->getErrorMessage());
@@ -24,23 +24,23 @@ class uploadImageModel extends classes\Classes\Object{
         $i                  = 0;
         $len                = count($this->paths);
         $dados              = array();
-        $dados['cod_album'] = $this->album;   
+        $dados['cod_album'] = $this->album;
         $dados['ext']       = $ext;     
         
         $this->extension    = $ext;
         $this->img          = array();
         while($i < $len){
             $dados['url']   = $this->paths[$i];
-            if(!$this->gfotos->inserir($dados)) $msg[] = $this->gfotos->getErrorMessage();
+            if(false === $this->gfotos->inserir($dados)) {$msg[] = $this->gfotos->getErrorMessage();}
             
             $where = "`url` = '".$this->paths[$i]."' && `cod_album` = '".$dados['cod_album']."'";
-            $this->img[] = $this->gfotos->selecionar(array(), $where);
+            $data  = $this->gfotos->selecionar(array(), $where, '1');
+            if(empty($data)){continue;}
+            $this->img[] = array_shift($data);
             $i++;
         }
-        
-        if(!empty($msg)){ $this->setErrorMessage ("Erro: ".implode("<br/>", $msg));}
-        else              $this->setSuccessMessage("Imagem enviada com sucesso!");
-        return (empty($msg));
+        if(!empty($msg)){ return $this->setErrorMessage ("Erro: ".implode("<br/>", $msg));}
+        return $this->setSuccessMessage("Imagem enviada com sucesso!");
     }
     
     public function getUrl($cod_foto, $size = "max"){
@@ -59,20 +59,18 @@ class uploadImageModel extends classes\Classes\Object{
         
         $item = $this->gfotos->getItem($cod_foto);
         if(empty($item)){
-            $this->setErrorMessage("A foto indicada não existe ou já foi apagada!");
-            return false;
+            return $this->setErrorMessage("A foto indicada não existe ou já foi apagada!");
         }
 
-        if(!$this->gfotos->apagar($cod_foto)){
+        if(false === $this->gfotos->apagar($cod_foto)){
             $this->setMessages($this->gfotos->getMessages());
             return false;
         }
         
         $diretorio = $item['url'];
         $img = UploaderImagesHelper::getInstanceOf();
-        if(!$img->drop($diretorio)){
-            $this->setAlertMessage("Foto excluída do banco de dados mas não apagada na pasta");
-            return false;
+        if(false === $img->drop($diretorio)){
+            return $this->setAlertMessage("Foto excluída do banco de dados mas não apagada na pasta");
         }
 
         $this->setMessages($this->gfotos->getMessages());
@@ -106,29 +104,33 @@ class uploadImageModel extends classes\Classes\Object{
     }
     
     public function draw($fotos = "", $cod_album = '', $print = true){
-        if($fotos == "" || empty ($fotos)) $fotos = array_shift ($this->img);
+        if($fotos == "" || empty ($fotos)) {$fotos = array_shift ($this->img);}
         $this->LoadComponent('galeria/foto/foto', 'fotos');
         $this->fotos->enableGetUrl();
         return $this->fotos->DrawAlbum($fotos, $cod_album, $print);
     }
     
-    private function init(){
-        $folder = $_REQUEST['folder'];
-        $folder = explode("/", $folder);
-        array_shift($folder);
-        array_pop($folder);
-        $folder = implode("/", $folder);
+    public function drawPicture($print = true){
+        $foto = array_shift($this->img);
+        $this->LoadComponent('galeria/foto/foto', 'fotos');
+        return $this->fotos->DrawPicture($foto, $print);
+    }
     
-        $this->album     = $_REQUEST['album'];
-        $usuario         = $_REQUEST['usuario'];
-        $this->upfolder  = "/$folder/$usuario/$this->album/";
-
-        if($this->album    == "") {$this->setErrorMessage("O album não pode ser vazio");   return false;}
-        if($usuario        == "") {$this->setErrorMessage("O usuário não pode ser vazio"); return false;}
-        if($this->upfolder == "") {$this->setErrorMessage("A pasta não pode ser vazia");   return false;}
+    private function init(){
+        $folder      = "";
+        $usuario     = isset($_REQUEST['usuario'])?$_REQUEST['usuario']:"";
+        $this->album = isset($_REQUEST['album'])?$_REQUEST['album']:"";
+        if(isset($_REQUEST['folder'])){
+            $folder = base64_decode($_REQUEST['folder']);
+            if(false === $folder){$folder = $_REQUEST['folder'];}
+            $this->upfolder  = "/$folder/$usuario/$this->album/";
+        }
+        $bool= true;
+        if($this->album    == "") {$this->appendErrorMessage("O album não pode ser vazio");   $bool= false;}
+        if($this->upfolder == "") {$this->appendErrorMessage("A pasta não pode ser vazia");   $bool= false;}
+        if($usuario        == "") {$this->appendErrorMessage("O usuário não pode ser vazio"); $bool= false;}
+        return $bool;
     }
     
 }
 
-
-?>

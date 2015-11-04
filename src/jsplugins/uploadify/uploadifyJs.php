@@ -1,25 +1,53 @@
 <?php
 
-use classes\Classes\JsPlugin;
-class uploadifyJs extends JsPlugin{
+class uploadifyJs extends JsUploader{
     
     public $file_sample = "sample.php";
     public $project_url = 'http://www.uploadify.com/';
-    private $functions = "";
-    
+    private $functions = "";    
+    protected $map = array(
+        'auto'             => array('name'=> 'auto'            , 'type'=>'bool'     ,'default'=>true),
+        'buttonText'       => array('name'=> 'buttonText'      , 'type'=>'text'     ,'default'=>'Selecionar Imagem'),
+        'buttonClass'      => array('name'=> 'buttonClass'     , 'type'=>'text'     ,'default'=>'btn btn-danger'),
+        'displayData'      => array('name'=> 'displayData'     , 'type'=>'text'     ,'default'=>'percentage'), //'percentage' - 'speed' // 
+        'fileDesc'         => array('name'=> 'fileDesc'        , 'type'=>'text'     ,'default'=>'Envie suas imagens'),
+        'fileExt'          => array('name'=> 'fileExt'         , 'type'=>'text'     ,'default'=>'*.jpg;*.jpeg;*.gif;*.png'),
+        'height'           => array('name'=> 'height'          , 'type'=>'text'     ,'default'=>'30px'),
+        'method'           => array('name'=> 'method'          , 'type'=>'text'     ,'default'=>'post'),
+        'onUploadSuccess'  => array('name'=> 'onUploadComplete', 'type'=>'function' ,'default'=>"
+            function (response, data, response) {
+                var myjson = JSON.parse(data);
+                if(typeof(myjson.status !== 'undefined') && myjson.status == 0){
+                    if(typeof(myjson.response) !== 'undefined'){blockUI_error(myjson.response);}
+                    else{blockUI_error('Falha ao enviar imagem!');}
+                }else{
+                    $('.uify_img').append(myjson.img);
+                }
+         }"),
+         'onUploadError'=> array(
+             'name'=> 'onUploadError', 'type'=>'function','default'=>"function (event,ID,fileObj,errorObj) {
+              blockUI_error('Erro ao enviar imagem. Causa do erro: '+errorObj.type + ' Extras: '+errorObj.info);
+         }"),
+         'onCancel'=> array(
+             'name'=> 'onCancel', 'type'=>'function','default'=>"function(event,ID,fileObj,data) {
+              blockUI_error('O upload do arquivo ' + fileObj.name + ' foi cancelado!');
+         }"),
+         'simUploadLimit' => array('name'=> 'simUploadLimit', 'type'=>'text','default'=>'1'),
+         'width'          => array('name'=> 'width'         , 'type'=>'text','default'=>'120px'),
+         'wmode'          => array('name'=> 'wmode'         , 'type'=>'text','default'=>'transparent')
+    );
     static private $instance;
     public static function getInstanceOf($plugin){
         $class_name = __CLASS__;
         if (!isset(self::$instance)) {
             self::$instance = new $class_name($plugin);
         }
-
         return self::$instance;
     } 
     
     public function draw($form, $camp = ""){
         
-        if($this->functions == "") throw new pluginException('uplodify', 'o plugin deve ser configurado!');
+        if($this->functions == "") {throw new pluginException('uplodify', 'o plugin deve ser configurado!');}
         $camp = $this->field_name; 
         $form->FieldSet("", "Fotos");
         $form->SetCustomCamp($this->getForm($camp));
@@ -32,66 +60,46 @@ class uploadifyJs extends JsPlugin{
     }
     
     private function getForm($camp){
-        return "<div id='$camp"."_msg' class='inf response-msg' style='display:none;'></div>
-              <div id=\"$camp\" class='uify'>Existe algum problema com o seu javascript</div>
-              <div id='$camp"."_img' class='uify_img images'></div>";
+        $this->LoadJsPlugin("galerias/lightbox", 'lb')->start("{$camp}_img", "#");
+        return "<div id='{$camp}_msg' class='inf response-msg' style='display:none;'></div>
+              <div id='$camp' class='uify'>Existe algum problema com o seu javascript</div>
+              <div id='{$camp}_img' class='uify_img images'></div>";
     }
     
     public function init(){
         $this->LoadJsPlugin('jqueryui/blockui', 'bui'); 
-        $this->Html->LoadBowerComponent("uploadify/jquery.uploadify.min");
-        $this->Html->LoadBowerComponentCss("uploadify/uploadify");
+        $this->Html->LoadBowerComponent("uploadify/jquery.uploadify.min", "uploadify/uploadify");
     }
-    
+
     public function configure($field_name, $album, $usuario, $folder = 'fotos', $multi = true){
-   
     	static $i = 0;
     	if($field_name == 'upload'){
-    		$i++;
-    		$field_name.= $i;
+            $i++;
+            $field_name.= $i;
     	}
-        $multi   = ($multi == true)?"true":"false";
-        $loadurl = $this->resource_url . "/lib/actions/load.php?album=$album";
+        $foldr           = base64_encode($folder);
+        $options          = $this->getOptions();
+        $multi            = ($multi == true)?"true":"false";
+        $loadurl          = $this->resource_url . "/src/lib/actions/load.php?album=$album";
+        $upload_script    = $this->resource_url_relative."src/lib/upload.php?album=$album&usuario=$usuario&folder=$foldr";
     	$this->field_name = $field_name;
-
+        $e                = explode(BASE_DIR, DIR_JS ."bower_components/uploadify");
+        $diruify_js       = end($e);
+        getTrueUrl($diruify_js);
+        getTrueUrl($upload_script);
+        getTrueUrl($loadurl);
     	$this->functions  = "
-                $('.uify_img').load('$loadurl');
-                $('.uify').fileUpload({
-                    'uploader': '".$this->url_relative."/scripts/uploader.swf',
-                    'cancelImg': '".$this->url_relative."/scripts/cancel.png',
-                    'script': '".$this->resource_url_relative."/lib/upload.php',
-                    'folder': '/$folder/',
-                
-                    'auto'       : true,
-                    'buttonText' : 'Selecionar Imagem',
-                    'displayData': 'percentage', //'percentage' - 'speed' // 
-                    'fileDesc'   : 'Envie suas imagens',
-                    'fileExt'    : '*.jpg;*.jpeg;*.gif;*.png',
-                    'multi'      : $multi,
-                    'method'     : 'post',
-                     onComplete: function (evt, queueID, fileObj, response, data) {
-                            var myjson = JSON.parse(response);
-                            if(myjson.status == 0){
-                                blockUI_error(myjson.response);
-                            }else{
-                                $('.uify_img').append(myjson.img);
-                            }
-                     },
-                     'onError': function (event,ID,fileObj,errorObj) {
-                          blockUI_error('Erro ao enviar imagem. Causa do erro: '+errorObj.type + ' Extras: '+errorObj.info);
-                     },
-                     'onCancel': function(event,ID,fileObj,data) {
-                          blockUI_error('O upload do arquivo ' + fileObj.name + ' foi cancelado!');
-                     },
-                     'scriptData'  : {
-                            'album':'$album',
-                            'usuario':'$usuario',
-                            'base_path':'/".PROJECT."/'
-                     },
-                     'simUploadLimit' : 1,
-                     'wmode'       : 'transparent'
-                });";
+            $('.uify_img').load('$loadurl');
+            $('.uify').uploadify({
+                'uploader'   : '/$upload_script',
+                'swf'        : '/$diruify_js/uploadify.swf',
+                'cancelImg'  : '/$diruify_js/uploadify-cancel.png',
+                'script'     : '/$upload_script',
+                'multi'      : $multi,
+                $options
+            });";
         $this->Html->LoadJQueryFunction($this->functions);
+        return $this;
     }
     
     public function loadPluginModel(){

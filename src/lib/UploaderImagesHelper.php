@@ -1,8 +1,9 @@
 <?php
 
-use classes\Classes\Object;
 class UploaderImagesHelper extends classes\Classes\Object {
 
+    
+        private $resizer = null;
 	private $arquivo = NULL;    //arquivo que conterá as fotos ou o array de fotos
         private $names   = NULL;    //guardara os nomes dos arquivos gerados
         private $diretorio;         //nome do diretorio a ser gravado
@@ -21,36 +22,8 @@ class UploaderImagesHelper extends classes\Classes\Object {
             return self::$instance;
         }
         
-        private function geraNome(){
-            return (rand(0, 5) . date('HisdmY'));
-        }
-        
-        public function Upload($diretorio, $arquivos = array(), $config = NULL){
-
-            $this->img_relative_path = DIR_DEFAULT_UPLOAD . "/". $diretorio;
-            $diretorio = DIR_UPLOAD.$diretorio; //diretorio das imagens
-
-            //inicializa as variaveis e faz os testes de sanidade
-            if(!$this->VerifyVars($diretorio, $arquivos, $config))return false;
-
-            //valida os arquivos
-            if(!$this->Validate($this->arquivo))return false;
-
-            //faz o upload das imagens
-            if(!$this->UploadImages($this->arquivo, $this->diretorio))return false;
-
-            return true;
-        }
-        
         private $uploaded = array();
-        private function setName($folder, $name){
-            $temp = ($this->img_relative_path ."$folder/$name");
-            getTrueDir($temp);
-            $this->paths[]    = $temp;
-            $this->names[]    = $name;
-            $this->uploaded[] = str_replace(DS, "/", "$temp.png");
-        }
-        
+
         public function getUploadedImages(){
             return $this->uploaded;
         }
@@ -66,157 +39,219 @@ class UploaderImagesHelper extends classes\Classes\Object {
         public function getExtension(){
             return $this->extension;
         }
+        
+        public function Upload($diretorio, $arquivos = array(), $config = NULL){
 
+            $this->img_relative_path = DIR_DEFAULT_UPLOAD . "/". $diretorio;
+            $diretorio = DIR_UPLOAD.$diretorio; //diretorio das imagens
+            getTrueDir($diretorio);
+            getTrueDir($this->img_relative_path);
 
-        private function VerifyVars($diretorio, $arquivos, $config){
+            //inicializa as variaveis e faz os testes de sanidade
+            if(false === $this->VerifyVars($diretorio, $arquivos, $config)){return false;}
 
-            //se o arquivo é vazio retorna falso
-            if(empty ($arquivos)){
-                $this->setErrorMessage("Selecione Um Arquivo.");
-                return false;
-            }
+            //valida os arquivos
+            if(false === $this->Validate($this->arquivo)){return false;}
 
-            //se o diretorio é vazio, enviará os arquivos para o diretorio padrao
-            $this->nome = $this->geraNome();
-            $diretorio .= $this->nome."/";
-            $dir = $diretorio;
-            if(!file_exists($dir)){
-                $this->LoadResource("files/dir", "dir_obj");
-                $dir      = explode("/", $dir);
-                $name     = array_pop($dir);
-                $name     = ($name == "")? array_pop($dir):$name;
-                $location = implode("/",$dir) . "/";
-                if(!$this->dir_obj->create($location, $name)){
-                    $this->setErrorMessage($this->dir_obj->getErrorMessage());
-                    return false;
-                }
-            }
-            
-            $this->arquivo   = array_shift($arquivos);
-            $this->diretorio = $diretorio;
+            //faz o upload das imagens
+            if(false === $this->UploadImages($this->arquivo, $this->diretorio)){return false;}
+
             return true;
         }
         
-        private function Validate($arquivos){
-            if(array_key_exists("tmp_name", $arquivos)){
-                if(!$this->ValidaImagem($arquivos)) return false;
-            }else{
-                foreach($arquivos as $imagem) 
-                    if(!$this->ValidaImagem($imagem))
-                        return false;  
-            }
-            
-            return true;
-        }
+                private function VerifyVars($diretorio, $arquivos, $config){
 
-        private function ValidaImagem($imagem){
+                    //se o arquivo é vazio retorna falso
+                    if(empty ($arquivos)){return $this->setErrorMessage("Selecione Um Arquivo.");}
 
-            // verifica se imagem possui dimensoes
-            $tamanhos = getimagesize( $imagem['tmp_name'] );
-            if ( !is_array( $tamanhos ) || empty( $tamanhos ) || $tamanhos === false){
-                $this->setErrorMessage("Arquivo enviado não é imagem");
-                return false;
-            }
+                    //se o diretorio é vazio, enviará os arquivos para o diretorio padrao
+                    $this->nome = $this->geraNome();
+                    $diretorio .= $this->nome."/";
+                    $dir        = $diretorio;
+                    if(false === $this->checkFileExists($dir)){return false;}
 
-            //verifica os tipos da imagem
-            $type = $tamanhos['mime'];
-            if(strpos($type, "image/")===false){
-                $this->setErrorMessage("Arquivo em formato inválido! A imagem deve ser dos tipo: 
-                    " . UPLOAD_IMAGE_EXTENSIONS ."
-                    .Envie outro arquivo");
-                return false;
-            }
-
-            if(!$this->config['resize']){
-
-                // Verifica tamanho do arquivo
-                if($imagem["size"] > UPLOAD_IMAGE_SIZE){
-                    $this->setErrorMessage("A imagem não pode ultrapassar (" . UPLOAD_IMAGE_SIZE . ") bytes.");
-                    return false;
+                    $this->arquivo   = array_shift($arquivos);
+                    $this->diretorio = $diretorio;
+                    return true;
                 }
-
-                // Verifica largura
-                if($tamanhos[0] > UPLOAD_IMAGE_WIDTH){
-                    $this->setErrorMessage("Largura da imagem não deve
-                                        ultrapassar " . UPLOAD_IMAGE_WIDTH . " pixels");
-                    return false;
+                
+                        private function geraNome(){
+                            return (rand(0, 5) . date('HisdmY'));
+                        }
+                        
+                        private function checkFileExists($diretorio){
+                            if(file_exists($diretorio)){return true;}
+                            $this->LoadResource("files/dir", "dir_obj");
+                            $dir      = explode("/", $diretorio);
+                            $name     = array_pop($dir);
+                            $nm       = ($name == "")? array_pop($dir):$name;
+                            $location = implode("/",$dir) . "/";
+                            if(!$this->dir_obj->create($location, $nm)){
+                                return $this->setErrorMessage($this->dir_obj->getErrorMessage());
+                            }
+                            return true;
+                        }
+                
+                private function Validate($arquivos){
+                    if(array_key_exists("tmp_name", $arquivos)){
+                        return($this->ValidaImagem($arquivos));
+                    }
+                    
+                    foreach($arquivos as $imagem){
+                        if(false === $this->ValidaImagem($imagem)){return false;}
+                    }
+                    return true;
                 }
+                        
+                        private function ValidaImagem($imagem){
 
-                // Verifica altura
-                if($tamanhos[1] > UPLOAD_IMAGE_HEIGHT){
-                    $this->setErrorMessage("Altura da imagem não deve
-                                        ultrapassar " . UPLOAD_IMAGE_HEIGHT . " pixels");
-                    return false;
-                }
-            }
-            return true;
-        }
+                            // verifica se imagem possui dimensoes
+                            $tamanhos = array();
+                            if(false === $this->verifyDimensions($imagem, $tamanhos)){return false;}
 
-        private function UploadImages($arquivos, $diretorio){
-            
-            //se forem várias imagens
-            if(!array_key_exists("tmp_name", $arquivos)){
-                foreach($arquivos as $img)
-                    if(!$this->uploadOneImage($img, $diretorio)) return false;
-            }
-            
-            //se for uma imagem
-            elseif(!$this->uploadOneImage($arquivos, $diretorio)) return false;
-            
-            $this->setSuccessMessage("Imagens Enviadas com sucesso!");
-            return true;
-        }
+                            //verifica os tipos da imagem
+                            if(false === $this->verifyMimeType($tamanhos)){return false;}
+                            
+                            //verifica o tamanho da imagem
+                            return $this->verifySizes($imagem, $tamanhos);
+                        }
+                        
+                                private function verifyDimensions($imagem, &$tamanhos){
+                                    $tamanhos = getimagesize( $imagem['tmp_name'] );
+                                    if ( !is_array( $tamanhos ) || empty( $tamanhos ) || $tamanhos === false){
+                                        return $this->setErrorMessage("Arquivo enviado não é imagem");
+                                    }
+                                    return true;
+                                }
+                                
+                                private function verifyMimeType($tamanhos){
+                                    $type = $tamanhos['mime'];
+                                    if(strpos($type, "image/")!==false){return true;}
+                                    return $this->setErrorMessage(
+                                        "Arquivo em formato inválido! A imagem deve ser dos tipo: 
+                                        " . UPLOAD_IMAGE_EXTENSIONS ."
+                                        .Envie outro arquivo"
+                                    );
+                                }
+                                
+                                private function verifySizes($imagem, $tamanhos){
+                                    if(false != $this->config['resize']){return true;}
+
+                                    // Verifica tamanho do arquivo
+                                    if($imagem["size"] > UPLOAD_IMAGE_SIZE){
+                                        return $this->setErrorMessage("A imagem não pode ultrapassar (" . UPLOAD_IMAGE_SIZE . ") bytes.");
+                                    }
+
+                                    // Verifica largura
+                                    if($tamanhos[0] > UPLOAD_IMAGE_WIDTH){
+                                        return $this->setErrorMessage("Largura da imagem não deve ultrapassar " . UPLOAD_IMAGE_WIDTH . " pixels");
+                                    }
+
+                                    // Verifica altura
+                                    if($tamanhos[1] > UPLOAD_IMAGE_HEIGHT){
+                                        return $this->setErrorMessage("Altura da imagem não deve ultrapassar " . UPLOAD_IMAGE_HEIGHT . " pixels");
+                                    }
+                                    return true;
+                                }
+                                
+                private function UploadImages($arquivos, $diretorio){
+
+                    //se forem várias imagens
+                    if(!array_key_exists("tmp_name", $arquivos)){
+                        foreach($arquivos as $img){
+                            if(!$this->uploadOneImage($img, $diretorio)) {return false;}
+                        }
+                    }
+
+                    //se for uma imagem
+                    elseif(!$this->uploadOneImage($arquivos, $diretorio)) {return false;}
+
+                    return $this->setSuccessMessage("Imagens Enviadas com sucesso!");
+                }                                
+                
         
-        private function uploadOneImage($img, $diretorio){
+                        private function uploadOneImage($img, $diretorio){
 
-            //gera um nome unico
-            $name = explode(".", $img['name']);
-            array_pop($name);
-            $name = implode(".", $name);
-            $name = GetPlainName($name);
-            $name = str_replace(" ", "-", $name);
+                            //gera um nome unico
+                            $name = "";
+                            $this->prepareImageName($img, $name);
+                            $this->setName($this->nome, $name);
+                            $dir = $diretorio . $name;
 
-            $this->setName($this->nome, $name);
-            $dir = $diretorio . $name;
+                            //salva todos os thumbs
+                            foreach ($this->config['images'] as $thumb){
+                                if(false === $this->SaveImage($img, $dir . $thumb['sufix'], $thumb)){
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+                        
+                                private function prepareImageName($img, &$name){
+                                    $name = explode(".", $img['name']);
+                                    array_pop($name);
+                                    $name = implode(".", $name);
+                                    $name = GetPlainName($name);
+                                    $name = str_replace(" ", "-", $name);
+                                }
+                                
+                                private function setName($folder, $name){
+                                    $file = ($this->img_relative_path ."$folder/$name");
+                                    getTrueDir($file);
+                                    $temp = str_replace(DS, DS.DS, $file);
+                                    $this->paths[]    = $temp;
+                                    $this->names[]    = $name;
+                                    $this->uploaded[] = str_replace(DS, "/", "$temp.png");
+                                }
 
-            //salva todos os thumbs
-            foreach ($this->config['images'] as $thumb)
-                 if(!$this->SaveImage($img, $dir . $thumb['sufix'], $thumb))
-                       return false;
-            return true;
-        }
-
-        private function SaveImage($imagem, $diretorio, $config){
-            $class = RESIZER_PADRAO."Resizer";
-            require_once  dirname(__FILE__) . "/resizers/".RESIZER_PADRAO."/$class.php";
-            $obj = new $class();
-            if(!$obj->SaveImage($imagem, $diretorio, $config, $this->extension)){
-                $this->setErrorMessage($obj->getErrorMessage());
-                return false;
-            }
-            return true;
-        }
+                                private function SaveImage($imagem, $diretorio, $config){
+                                    $obj = $this->loadResizer();
+                                    if(!$obj->SaveImage($imagem, $diretorio, $config, $this->extension)){
+                                        return $this->setErrorMessage($obj->getErrorMessage());
+                                    }
+                                    return true;
+                                }
+                                
+                                        private function loadResizer(){
+                                            if(is_object($this->resizer)){return $this->resizer;}
+                                            $class = RESIZER_PADRAO."Resizer";
+                                            require_once  dirname(__FILE__) . "/resizers/".RESIZER_PADRAO."/$class.php";
+                                            $this->resizer = new $class();
+                                            return $this->resizer;
+                                        }
         
         public function drop($diretorio){
-            
             $this->LoadResource("files/dir", "dir_obj");
-            $diretorio = explode("/", $diretorio);
-            array_pop($diretorio);
-            $diretorio = implode("/", $diretorio);
-            $diretorio = str_replace(DIR_DEFAULT_UPLOAD, "", $diretorio);
-            $diretorio = DIR_UPLOAD.$diretorio;
-            
+            $this->prepareDir($diretorio);
             $files = $this->dir_obj->getArquivos($diretorio);
-            if(count($files) >= count($this->config['images'])){
-                if(!$this->dir_obj->remove($diretorio)){
-                    $this->setErrorMessage($this->dir_obj->getErrorMessage());
-                    return false;
+            if(false === $this->checkImageCount($files, $diretorio)){return false;}
+            else{$this->removeFiles($diretorio, $files);}
+            return $this->setSuccessMessage("Imagem removida com sucesso!");
+        }
+        
+                private function prepareDir(&$diretorio){
+                    $diretorio = explode(DS, $diretorio);
+                    array_pop($diretorio);
+                    $diretorio = implode(DS, $diretorio);
+                    $diretorio = str_replace(DIR_DEFAULT_UPLOAD, "", $diretorio);
+                    $diretorio = DIR_UPLOAD.$diretorio;
                 }
-            }else{
-                $find = explode("/", $diretorio);
-                $find = end($find);
-                foreach($files as $img){
-                    if(strpos($img, $find) !== false){
+                
+                private function checkImageCount($files, $diretorio){
+                    if(count($files) >= count($this->config['images'])){
+                        if(!$this->dir_obj->remove($diretorio)){
+                            $this->setErrorMessage($this->dir_obj->getErrorMessage());
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                
+                private function removeFiles($diretorio, $files){
+                    $array = explode("/", $diretorio);
+                    $find  = end($array);
+                    foreach($files as $img){
+                        if(strpos($img, $find) === false){continue;}
                         $dirname = str_replace(DIR_DEFAULT_UPLOAD, "", $diretorio);
                         $dirname = DIR_UPLOAD.$dirname;
                         foreach($this->config['img'] as $itemp){
@@ -225,10 +260,6 @@ class UploaderImagesHelper extends classes\Classes\Object {
                         }
                     }
                 }
-            }
-            $this->setSuccessMessage("Imagem removida com sucesso!");
-            return true;
-        }
         
         private function configure(){
             $this->config['efeito'] = array("adaptiveResize");
@@ -260,5 +291,3 @@ class UploaderImagesHelper extends classes\Classes\Object {
             );
         }
 }
-
-?>

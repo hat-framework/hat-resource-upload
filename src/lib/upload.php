@@ -16,12 +16,12 @@ function debugaki($dados){
 
     $msgs  = array();
     $model = new uploadImageModel();    
-    if(!$model->upload()){
+    if(false === $model->upload()){
         $msgs['response'] = $model->getErrorMessage();
         $msgs['status']   = "0";
     }
     else{
-        $msgs['img']      = $model->draw("", '', false);
+        $msgs['img']      = $model->drawPicture(false);
         $msgs['response'] = $model->getSuccessMessage();
         $msgs['status']   = "1";
     }
