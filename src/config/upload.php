@@ -12,7 +12,7 @@ if(!defined('URL_UPLOAD'))                {define('URL_UPLOAD'                 ,
 /*configurações da imagem*/
 if(!defined('UPLOAD_IMAGE_EFEITO'))       {define('UPLOAD_IMAGE_EFEITO'        , "ResizePercent");}
 if(!defined('UPLOAD_IMAGE_EXTENSIONS'))   {define('UPLOAD_IMAGE_EXTENSIONS'    , "pjpeg|jpeg|png|gif|bmp");}
-if(!defined('UPLOAD_IMAGE_SIZE'))         {define('UPLOAD_IMAGE_SIZE'          , 2013766);}//arquivos de 2mb
+if(!defined('UPLOAD_IMAGE_SIZE'))         {define('UPLOAD_IMAGE_SIZE'          , 4027532);}//arquivos de 4mb
 if(!defined('UPLOAD_RESIZE'))             {define('UPLOAD_RESIZE'              , "");}
 if(!defined('UPLOAD_IMAGE_THUMB_EFEITO')) {define('UPLOAD_IMAGE_THUMB_EFEITO'  , "ResizePercent");}
 

@@ -138,17 +138,17 @@ class UploaderImagesHelper extends classes\Classes\Object {
                                     if(false != $this->config['resize']){return true;}
 
                                     // Verifica tamanho do arquivo
-                                    if($imagem["size"] > UPLOAD_IMAGE_SIZE){
+                                    if($imagem["size"] > UPLOAD_IMAGE_SIZE && UPLOAD_IMAGE_SIZE != 0){
                                         return $this->setErrorMessage("A imagem não pode ultrapassar (" . UPLOAD_IMAGE_SIZE . ") bytes.");
                                     }
 
                                     // Verifica largura
-                                    if($tamanhos[0] > UPLOAD_IMAGE_WIDTH){
+                                    if($tamanhos[0] > UPLOAD_IMAGE_WIDTH && UPLOAD_IMAGE_WIDTH != 0){
                                         return $this->setErrorMessage("Largura da imagem não deve ultrapassar " . UPLOAD_IMAGE_WIDTH . " pixels");
                                     }
 
                                     // Verifica altura
-                                    if($tamanhos[1] > UPLOAD_IMAGE_HEIGHT){
+                                    if($tamanhos[1] > UPLOAD_IMAGE_HEIGHT && UPLOAD_IMAGE_HEIGHT != 0){
                                         return $this->setErrorMessage("Altura da imagem não deve ultrapassar " . UPLOAD_IMAGE_HEIGHT . " pixels");
                                     }
                                     return true;

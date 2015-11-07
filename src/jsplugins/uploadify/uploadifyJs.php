@@ -14,7 +14,7 @@ class uploadifyJs extends JsUploader{
         'fileExt'          => array('name'=> 'fileExt'         , 'type'=>'text'     ,'default'=>'*.jpg;*.jpeg;*.gif;*.png'),
         'height'           => array('name'=> 'height'          , 'type'=>'text'     ,'default'=>'30px'),
         'method'           => array('name'=> 'method'          , 'type'=>'text'     ,'default'=>'post'),
-        'onUploadSuccess'  => array('name'=> 'onUploadComplete', 'type'=>'function' ,'default'=>"
+        'onUploadSuccess'  => array('name'=> 'onUploadSuccess' , 'type'=>'function' ,'default'=>"
             function (response, data, response) {
                 var myjson = JSON.parse(data);
                 if(typeof(myjson.status !== 'undefined') && myjson.status == 0){
@@ -77,7 +77,7 @@ class uploadifyJs extends JsUploader{
             $i++;
             $field_name.= $i;
     	}
-        $foldr           = base64_encode($folder);
+        $foldr            = base64_encode($folder);
         $options          = $this->getOptions();
         $multi            = ($multi == true)?"true":"false";
         $loadurl          = $this->resource_url . "/src/lib/actions/load.php?album=$album";

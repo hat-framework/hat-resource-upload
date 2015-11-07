@@ -12,7 +12,9 @@ class phpthumbResizer extends classes\Classes\Object implements Resizer{
             //cria a nova imagem, salva os novos efeitos e faz o upload da mesma no diretorio
             $this->thumb = PhpThumbFactory::create($imagem['tmp_name']);
             //$this->thumb->adaptiveResize($config['width'], $config['height']);
-            $this->thumb->resize($config['width'], $config['height']);
+            if($config['width'] != 0 && $config['height'] != 0){
+                $this->thumb->resize($config['width'], $config['height']);
+            }
             //$this->thumb->resizePercent("50");
             $this->thumb->save($diretorio, $extension);
             return true;
@@ -52,5 +54,3 @@ class phpthumbResizer extends classes\Classes\Object implements Resizer{
         $this->config['rotateImageNDegrees']['param1'] = '180';
     }
 }
-
-?>

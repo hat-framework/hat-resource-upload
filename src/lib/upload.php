@@ -8,6 +8,8 @@ function debugaki($dados){
 
     define("UPLOADING", true);
     if(file_exists($_SERVER['DOCUMENT_ROOT'].'/init.php')) require_once $_SERVER['DOCUMENT_ROOT'].'/init.php';
+    $obj = new classes\Classes\Object();
+    $obj->LoadResource('upload', 'up');
     require_once 'Resizer.php';
     require_once 'uploadImageModel.php';
     require_once 'config.php';
