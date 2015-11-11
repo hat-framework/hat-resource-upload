@@ -16,6 +16,7 @@ class uploadifiveJs extends JsUploader{
         'method'           => array('name'=> 'method'          , 'type'=>'text'     ,'default'=>'post'),
         'onUploadComplete' => array('name'=> 'onUploadComplete', 'type'=>'function' ,'default'=>"
             function (response, data, response) {
+            try{
                 var myjson = JSON.parse(data);
                 if(typeof(myjson.status !== 'undefined') && myjson.status == 0){
                     if(typeof(myjson.response) !== 'undefined'){blockUI_error(myjson.response);}
@@ -23,14 +24,19 @@ class uploadifiveJs extends JsUploader{
                 }else{
                     $('.uify_img').append(myjson.img);
                 }
+            }catch(e){  } 
          }"),
          'onUploadError'=> array(
-             'name'=> 'onUploadError', 'type'=>'function','default'=>"function (event,ID,fileObj,errorObj) {
-              blockUI_error('Erro ao enviar imagem. Causa do erro: '+errorObj.type + ' Extras: '+errorObj.info);
+            'name'=> 'onUploadError', 'type'=>'function','default'=>"function (event,ID,fileObj,errorObj) {
+            try{
+                blockUI_error('Erro ao enviar imagem. Causa do erro: '+errorObj.type + ' Extras: '+errorObj.info);
+            }catch(e){  } 
          }"),
          'onCancel'=> array(
              'name'=> 'onCancel', 'type'=>'function','default'=>"function(event,ID,fileObj,data) {
+              try{
               blockUI_error('O upload do arquivo ' + fileObj.name + ' foi cancelado!');
+              }catch(e){  } 
          }"),
          'removeCompleted'=> array('name'=> 'removeCompleted', 'type'=>'bool','default'=>true),
          'simUploadLimit' => array('name'=> 'simUploadLimit' , 'type'=>'text','default'=>'1'),

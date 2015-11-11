@@ -26,18 +26,21 @@ class uploadImageModel extends classes\Classes\Object{
         $dados              = array();
         $dados['cod_album'] = $this->album;
         $dados['ext']       = $ext;     
-        
         $this->extension    = $ext;
         $this->img          = array();
         while($i < $len){
+            $where = array();
             $dados['url']   = $this->paths[$i];
             if(false === $this->gfotos->inserir($dados)) {$msg[] = $this->gfotos->getErrorMessage();}
             
-            $where = "`url` = '".$this->paths[$i]."' && `cod_album` = '".$dados['cod_album']."'";
-            $data  = $this->gfotos->selecionar(array(), $where, '1');
+            $where[] = "`url` = '".$this->paths[$i]."' AND `cod_album` = '".$dados['cod_album']."'";
+            $url     = str_replace("//",'/', $this->paths[$i]);
+            $where[] = "`url` = '$url' && `cod_album` = '".$dados['cod_album']."'";
+            $w       = implode(" OR ", $where);
+            $data  = $this->gfotos->selecionar(array(), $w, '1');
+            $i++;
             if(empty($data)){continue;}
             $this->img[] = array_shift($data);
-            $i++;
         }
         if(!empty($msg)){ return $this->setErrorMessage ("Erro: ".implode("<br/>", $msg));}
         return $this->setSuccessMessage("Imagem enviada com sucesso!");
