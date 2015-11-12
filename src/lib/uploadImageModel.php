@@ -1,7 +1,5 @@
 <?php
 
-
-use classes\Classes\Object;
 class uploadImageModel extends classes\Classes\Object{
     
     private $img = array();
@@ -12,39 +10,70 @@ class uploadImageModel extends classes\Classes\Object{
     public function upload(){
         
         if(false === $this->init()){return false;}
-        $img    = UploaderImagesHelper::getInstanceOf();
-        if(!$img->Upload($this->upfolder, $_FILES)){
-            $this->setErrorMessage ($img->getErrorMessage());
-            return false;
-        }
         
-        $this->paths        = $img->getPaths();
-        $ext                = $img->getExtension();
+        if(false === $this->uploadImage() && false === $this->uploadFile()){return false;}
+        
         $msg                = array();
         $i                  = 0;
         $len                = count($this->paths);
         $dados              = array();
         $dados['cod_album'] = $this->album;
-        $dados['ext']       = $ext;     
-        $this->extension    = $ext;
+        $dados['ext']       = $this->ext;
+        $this->extension    = $this->ext;
         $this->img          = array();
         while($i < $len){
-            $where = array();
             $dados['url']   = $this->paths[$i];
             if(false === $this->gfotos->inserir($dados)) {$msg[] = $this->gfotos->getErrorMessage();}
-            
-            $where[] = "`url` = '".$this->paths[$i]."' AND `cod_album` = '".$dados['cod_album']."'";
-            $url     = str_replace("//",'/', $this->paths[$i]);
-            $where[] = "`url` = '$url' && `cod_album` = '".$dados['cod_album']."'";
-            $w       = implode(" OR ", $where);
-            $data  = $this->gfotos->selecionar(array(), $w, '1');
+            $where = $this->getWhere($dados, $i);
+            $data  = $this->gfotos->selecionar(array(), $where, '1');
+
             $i++;
-            if(empty($data)){continue;}
+            if(empty($data)){
+                        $this->gfotos->db->printSentenca();
+                continue;
+                
+            }
             $this->img[] = array_shift($data);
         }
         if(!empty($msg)){ return $this->setErrorMessage ("Erro: ".implode("<br/>", $msg));}
         return $this->setSuccessMessage("Imagem enviada com sucesso!");
     }
+    
+            private function getWhere($dados, $i){
+                $where   = array();
+                $url     = str_replace("//",'/', $this->paths[$i]);
+                $url2    = $url;
+                getTrueUrl($url);
+                getTrueDir($url2);
+                $where[] = "`url` = '$url'  AND `cod_album` = '".$dados['cod_album']."'";
+                $where[] = "`url` = '$url2' AND `cod_album` = '".$dados['cod_album']."'";
+                
+                $url     = str_replace("/",'//', $url);
+                $url2    = str_replace("\\",'\\\\', $url2);;
+                $where[] = "`url` = '$url'  AND `cod_album` = '".$dados['cod_album']."'";
+                $where[] = "`url` = '$url2' AND `cod_album` = '".$dados['cod_album']."'";
+                return implode(" OR ", $where);
+            }
+    
+            private function uploadImage(){
+                $img = UploaderImagesHelper::getInstanceOf();
+                if(false === $img->Upload($this->upfolder, $_FILES)){
+                    return $this->setErrorMessage ($img->getErrorMessage());
+                }
+                $this->paths = $img->getPaths();
+                $this->ext   = $img->getExtension();
+                return true;
+            }
+            
+            private function uploadFile(){
+                $file = UploaderHelper::getInstanceOf();
+                if(false === $file->Upload($_FILES, "$this->upfolder")){
+                    return $this->setErrorMessage ($file->getErrorMessage());
+                }
+                $this->paths = $file->getPaths();
+                $this->ext   = $file->getExtension();
+                return true;
+            }
     
     public function getUrl($cod_foto, $size = "max"){
         $this->LoadModel("galeria/foto", 'foto');
@@ -59,21 +88,22 @@ class uploadImageModel extends classes\Classes\Object{
     }
     
     public function apagar($cod_foto){
-        
-        $item = $this->gfotos->getItem($cod_foto);
+        $img       = UploaderImagesHelper::getInstanceOf();
+        $item      = $this->gfotos->getItem($cod_foto);
         if(empty($item)){
             return $this->setErrorMessage("A foto indicada não existe ou já foi apagada!");
         }
 
+        $diretorio = $item['url'];
         if(false === $this->gfotos->apagar($cod_foto)){
+            $img->drop($diretorio);
             $this->setMessages($this->gfotos->getMessages());
             return false;
         }
         
-        $diretorio = $item['url'];
-        $img = UploaderImagesHelper::getInstanceOf();
         if(false === $img->drop($diretorio)){
-            return $this->setAlertMessage("Foto excluída do banco de dados mas não apagada na pasta");
+            $this->setAlertMessage("Foto excluída do banco de dados mas não apagada na pasta");
+            return false;
         }
 
         $this->setMessages($this->gfotos->getMessages());
@@ -136,4 +166,3 @@ class uploadImageModel extends classes\Classes\Object{
     }
     
 }
-

@@ -11,7 +11,7 @@ class uploadifiveJs extends JsUploader{
         'buttonClass'      => array('name'=> 'buttonClass'     , 'type'=>'text'     ,'default'=>'btn btn-danger'),
         'displayData'      => array('name'=> 'displayData'     , 'type'=>'text'     ,'default'=>'percentage'), //'percentage' - 'speed' // 
         'fileDesc'         => array('name'=> 'fileDesc'        , 'type'=>'text'     ,'default'=>'Envie suas imagens'),
-        'fileExt'          => array('name'=> 'fileExt'         , 'type'=>'text'     ,'default'=>'*.jpg;*.jpeg;*.gif;*.png'),
+        'fileType'         => array('name'=> 'fileExt'         , 'type'=>'text'     ,'default'=>'image/*|application/pdf'),
         'height'           => array('name'=> 'height'          , 'type'=>'text'     ,'default'=>'30px'),
         'method'           => array('name'=> 'method'          , 'type'=>'text'     ,'default'=>'post'),
         'onUploadComplete' => array('name'=> 'onUploadComplete', 'type'=>'function' ,'default'=>"

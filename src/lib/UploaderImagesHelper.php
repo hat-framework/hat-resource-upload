@@ -51,10 +51,16 @@ class UploaderImagesHelper extends classes\Classes\Object {
             if(false === $this->VerifyVars($diretorio, $arquivos, $config)){return false;}
 
             //valida os arquivos
-            if(false === $this->Validate($this->arquivo)){return false;}
+            if(false === $this->Validate($this->arquivo)){
+                $this->dir_obj->remove($this->diretorio);
+                return false;
+            }
 
             //faz o upload das imagens
-            if(false === $this->UploadImages($this->arquivo, $this->diretorio)){return false;}
+            if(false === $this->UploadImages($this->arquivo, $this->diretorio)){
+                $this->dir_obj->remove($this->diretorio);
+                return false;
+            }
 
             return true;
         }
@@ -221,11 +227,21 @@ class UploaderImagesHelper extends classes\Classes\Object {
                                         }
         
         public function drop($diretorio){
+            getTrueDir($diretorio);
+            if(trim($diretorio) == ""){return true;}
             $this->LoadResource("files/dir", "dir_obj");
-            $this->prepareDir($diretorio);
-            $files = $this->dir_obj->getArquivos($diretorio);
-            if(false === $this->checkImageCount($files, $diretorio)){return false;}
-            else{$this->removeFiles($diretorio, $files);}
+            $filedir = DIR_UPLOAD.$diretorio;
+            getTrueDir($filedir);
+            $file    = str_replace(array('upload'.DS."upload", "uploadupload"),'upload',$filedir);
+            if(!is_file($file)){
+                $this->prepareDir($diretorio);
+                $files = $this->dir_obj->getArquivos($diretorio);
+                if(false === $this->checkImageCount($files, $diretorio)){return false;}
+                else{$this->removeFiles($diretorio, $files);}
+            }else{
+                $this->dir_obj->remove($file);
+            }
+            
             return $this->setSuccessMessage("Imagem removida com sucesso!");
         }
         
