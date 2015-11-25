@@ -158,10 +158,17 @@ class uploadImageModel extends classes\Classes\Object{
             if(false === $folder){$folder = $_REQUEST['folder'];}
             $this->upfolder  = "/$folder/$usuario/$this->album/";
         }
+        
         $bool= true;
         if($this->album    == "") {$this->appendErrorMessage("O album não pode ser vazio");   $bool= false;}
         if($this->upfolder == "") {$this->appendErrorMessage("A pasta não pode ser vazia");   $bool= false;}
         if($usuario        == "") {$this->appendErrorMessage("O usuário não pode ser vazio"); $bool= false;}
+        
+        $album = $this->LoadModel("galeria/album", 'alb')->getItem($this->album);
+        if(empty($album)){return false;}
+        
+        $this->mimes = isset($album['extramimes'])?$album['extramimes']:"";
+        
         return $bool;
     }
     

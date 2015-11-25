@@ -7,6 +7,7 @@ class UploaderHelper extends classes\Classes\Object{
         static private $instance;
         private $ext   = "";
         private $paths = array();
+        private $mimes = array();
         
         public static function getInstanceOf(){
             $class_name = __CLASS__;
@@ -15,7 +16,10 @@ class UploaderHelper extends classes\Classes\Object{
             return self::$instance;
         }
 
-        public function Upload($arquivos, $diretorio = ""){
+        public function Upload($arquivos, $diretorio = "", $mimes = ""){
+            if($mimes !== ""){
+                $this->mimes = is_array($mimes)?$mimes:explode("|", $mimes);
+            }
             return ($this->UploadFile($arquivos, $diretorio));
         }
 
@@ -64,6 +68,12 @@ class UploaderHelper extends classes\Classes\Object{
                             "Arquivo em formato não permitido! O arquivo não pode ser dos tipo: 
                             " . UPLOAD_BLOCKED_EXTENSIONS ."
                             .Envie outro arquivo"
+                        );
+                    }
+                    
+                    if(!empty($this->mimes) && !in_array($mime, $this->mimes)){
+                        return $this->setErrorMessage(
+                            "Erro ao fazer upload! O arquivo que você enviou não é permitido!"
                         );
                     }
                     return true;
