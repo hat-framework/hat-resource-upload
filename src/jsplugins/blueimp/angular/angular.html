@@ -7,16 +7,16 @@
             <div class="col-lg-7">
                 <!-- The fileinput-button span is used to style the file input field as button -->
                 <span class="btn btn-success fileinput-button" ng-class="{disabled: disabled}">
-                    <i class="glyphicon glyphicon-plus"></i>
+                    <i class="fa fa-plus"></i>
                     <span>Selecionar arquivo</span>
                     <input type="file" name="files[]" multiple ng-disabled="disabled">
                 </span>
                 <button type="button" class="btn btn-primary start" data-ng-click="submit()">
-                    <i class="glyphicon glyphicon-upload"></i>
+                    <i class="fa fa-upload"></i>
                     <span>Iniciar upload</span>
                 </button>
                 <button type="button" class="btn btn-warning cancel" data-ng-click="cancel()">
-                    <i class="glyphicon glyphicon-ban-circle"></i>
+                    <i class="fa fa-times"></i>
                     <span>Cancelar upload</span>
                 </button>
                 <!-- The global file processing state -->
@@ -55,15 +55,15 @@
                 </td>
                 <td>
                     <button type="button" class="btn btn-primary start" data-ng-click="file.$submit()" data-ng-hide="!file.$submit || options.autoUpload" data-ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
-                        <i class="glyphicon glyphicon-upload"></i>
+                        <i class="fa fa-upload"></i>
                         <span>Iniciar</span>
                     </button>
                     <button type="button" class="btn btn-warning cancel" data-ng-click="file.$cancel()" data-ng-hide="!file.$cancel">
-                        <i class="glyphicon glyphicon-ban-circle"></i>
+                        <i class="fa fa-times"></i>
                         <span>Cancelar</span>
                     </button>
                     <button data-ng-controller="FileDestroyController" type="button" class="btn btn-danger destroy" data-ng-click="file.$destroy()" data-ng-hide="!file.$destroy">
-                        <i class="glyphicon glyphicon-trash"></i>
+                        <i class="fa fa-trash"></i>
                         <span>Apagar</span>
                     </button>
                 </td>
